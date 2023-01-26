@@ -7,13 +7,15 @@ from keras.layers import Conv2D, Dense, Flatten, Reshape, LeakyReLU, Dropout, Up
 from keras.losses import BinaryCrossentropy
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
-from keras_preprocessing.image import array_to_img
+#from keras_preprocessing.image import array_to_img
+from keras.utils import array_to_img
 from keras.callbacks import Callback
 
 from matplotlib import pyplot as plt
 
-logging.basicConfig(level=logging.INFO)
 
+logging.basicConfig(level=logging.INFO)
+epochs = 50
 ds = tfds.load('fashion_mnist', split='train')
 # Getting the data out of the pipeline
 # Using the numpy iterator fetches a batch of data everytime a next function is called.
@@ -28,6 +30,9 @@ for idx in range(4):
 
 
 # plt.show()
+plt.clf()
+plt.cla()
+plt.close()
 
 # Scaling the data
 def scale_images(data):
@@ -39,6 +44,7 @@ def scale_images(data):
 ds = tfds.load('fashion_mnist', split='train')
 logging.info("Performing the Preprocessing operations on the imported data")
 ds = ds.map(scale_images)
+ds = ds.take(12800)
 ds = ds.cache()
 ds = ds.shuffle(60000)
 ds = ds.batch(128)
@@ -218,4 +224,12 @@ logging.info("compiling the model")
 fashion_gan.compile(g_opt,d_opt,g_loss,d_loss)
 
 # Training the model
-hist = fashion_gan.fit(ds, epochs=20, callbacks= monitor)
+hist = fashion_gan.fit(ds, epochs=epochs, callbacks= monitor)
+g_loss = hist.history['g_loss']
+d_loss = hist.history['d_loss']
+
+plt.plot(range(epochs), g_loss, label='generator')
+plt.plot(range(epochs), d_loss, label='discriminator')
+plt.xlabel('epoch')
+plt.ylabel('accuracy')
+plt.savefig(os.path.join('images','accuracy_plots','plot.png'))
